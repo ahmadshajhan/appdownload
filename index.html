@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Vyuha Store | Next-Gen App Hub</title>
+  <!-- Google Fonts & Font Awesome -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Three.js Core and Addons for 3D Background -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+      }
+    }
+  </script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #050b1a;
+      color: #ffffff;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* Canvas 3D Background */
+    #bg-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      display: block;
+      pointer-events: none;
+    }
+
+    /* Main content overlay */
+    .content {
+      position: relative;
+      z-index: 10;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(3px);
+    }
+
+    /* Navbar */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 5%;
+      flex-wrap: wrap;
+      background: rgba(5, 11, 26, 0.5);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .logo {
+      font-size: 1.9rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #FFFFFF, #a855f7, #3b82f6);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo i {
+      background: none;
+      -webkit-background-clip: unset;
+      background-clip: unset;
+      color: #a855f7;
+      font-size: 2rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+    }
+
+    .nav-links a {
+      color: rgba(255,255,255,0.8);
+      text-decoration: none;
+      font-weight: 500;
+      transition: 0.3s;
+      font-size: 1rem;
+    }
+
+    .nav-links a:hover {
+      color: #a855f7;
+      text-shadow: 0 0 8px rgba(168,85,247,0.6);
+    }
+
+    /* Hero Section / App Card */
+    .hero {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 3rem 1.5rem;
+    }
+
+    .app-card {
+      max-width: 500px;
+      width: 100%;
+      background: rgba(20, 28, 45, 0.7);
+      backdrop-filter: blur(16px);
+      border-radius: 3rem;
+      padding: 2rem 2rem 2.5rem;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.2);
+      box-shadow: 0 25px 45px rgba(0,0,0,0.3), 0 0 20px rgba(168,85,247,0.2);
+      transition: transform 0.4s ease, box-shadow 0.4s;
+      animation: floatGlow 3s infinite alternate;
+    }
+
+    .app-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 35px 55px rgba(0,0,0,0.4), 0 0 30px rgba(168,85,247,0.4);
+    }
+
+    @keyframes floatGlow {
+      0% {
+        box-shadow: 0 25px 45px rgba(0,0,0,0.3), 0 0 15px rgba(168,85,247,0.2);
+        transform: translateY(0px);
+      }
+      100% {
+        box-shadow: 0 35px 55px rgba(0,0,0,0.4), 0 0 30px rgba(168,85,247,0.5);
+        transform: translateY(-6px);
+      }
+    }
+
+    .app-icon {
+      width: 110px;
+      height: 110px;
+      background: linear-gradient(145deg, #1e2a3a, #0f172a);
+      border-radius: 28px;
+      margin: 0 auto 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+      border: 1px solid rgba(168,85,247,0.5);
+    }
+
+    .app-icon i {
+      font-size: 4.8rem;
+      color: #a855f7;
+      filter: drop-shadow(0 0 8px #a855f7);
+    }
+
+    .app-title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(to right, #fff, #c084fc);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .app-badge {
+      display: inline-block;
+      background: rgba(168,85,247,0.2);
+      backdrop-filter: blur(4px);
+      padding: 0.3rem 1rem;
+      border-radius: 40px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #c084fc;
+      letter-spacing: 0.5px;
+      margin-bottom: 1.2rem;
+      border: 1px solid rgba(168,85,247,0.4);
+    }
+
+    .app-description {
+      color: #ccd6f6;
+      line-height: 1.5;
+      margin: 1rem 0 1.8rem;
+      font-size: 1rem;
+    }
+
+    .feature-list {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(0,0,0,0.4);
+      padding: 0.4rem 1rem;
+      border-radius: 60px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .feature i {
+      color: #a855f7;
+      font-size: 0.9rem;
+    }
+
+    /* Download Button */
+    .download-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: linear-gradient(95deg, #a855f7, #3b82f6);
+      border: none;
+      padding: 1rem 2.5rem;
+      border-radius: 60px;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 20px rgba(168,85,247,0.4);
+      width: 100%;
+      max-width: 280px;
+      margin-top: 0.5rem;
+      text-decoration: none;
+    }
+
+    .download-btn i {
+      font-size: 1.4rem;
+      transition: transform 0.2s;
+    }
+
+    .download-btn:hover {
+      transform: scale(1.03);
+      background: linear-gradient(95deg, #c084fc, #2563eb);
+      box-shadow: 0 12px 28px rgba(168,85,247,0.6);
+      gap: 16px;
+    }
+
+    .download-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* extra modern info section */
+    .info-section {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      padding: 2rem 5% 3rem;
+      margin-top: 1rem;
+    }
+
+    .info-card {
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(8px);
+      border-radius: 1.5rem;
+      padding: 1rem 1.8rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: all 0.2s;
+    }
+
+    .info-card i {
+      font-size: 1.8rem;
+      color: #a855f7;
+    }
+
+    .info-card span {
+      font-weight: 500;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.85rem;
+      color: #8e9baf;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      margin-top: 2rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 650px) {
+      .navbar {
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .app-title {
+        font-size: 2rem;
+      }
+      .app-card {
+        padding: 1.5rem;
+      }
+      .download-btn {
+        font-size: 1rem;
+        padding: 0.85rem 1.5rem;
+      }
+      .feature-list {
+        gap: 0.8rem;
+      }
+    }
+
+    /* custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #a855f7;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="bg-canvas"></canvas>
+
+  <div class="content">
+    <nav class="navbar">
+      <div class="logo">
+        <i class="fas fa-cube"></i>
+        <span>Vyuha Store</span>
+      </div>
+      <div class="nav-links">
+        <a href="#">Home</a>
+        <a href="#">Featured</a>
+        <a href="#">Updates</a>
+        <a href="#">Support</a>
+      </div>
+    </nav>
+
+    <div class="hero">
+      <div class="app-card">
+        <div class="app-icon">
+          <i class="fas fa-bolt"></i>
+        </div>
+        <div class="app-title">Vyuha App</div>
+        <div class="app-badge">
+          <i class="fas fa-check-circle"></i> Official Release
+        </div>
+        <p class="app-description">
+          Experience the next-gen performance, sleek UI, and powerful features.
+          Vyuha brings seamless connectivity and futuristic tools right to your fingertips.
+        </p>
+        <div class="feature-list">
+          <div class="feature"><i class="fas fa-tachometer-alt"></i> Lightning Fast</div>
+          <div class="feature"><i class="fas fa-shield-alt"></i> Secure</div>
+          <div class="feature"><i class="fas fa-mobile-alt"></i> Optimized</div>
+        </div>
+        <!-- Download button triggers the APK download -->
+        <button class="download-btn" id="downloadBtn">
+          <i class="fas fa-download"></i> Download Now
+          <i class="fas fa-arrow-right"></i>
+        </button>
+        <p style="font-size: 0.7rem; margin-top: 1rem; opacity: 0.7;">
+          <i class="fas fa-android"></i> Android APK • Version 1.0.0 • 48 MB
+        </p>
+      </div>
+    </div>
+
+    <div class="info-section">
+      <div class="info-card">
+        <i class="fas fa-star"></i>
+        <span>Trusted by 10k+ users</span>
+      </div>
+      <div class="info-card">
+        <i class="fas fa-sync-alt"></i>
+        <span>Regular updates</span>
+      </div>
+      <div class="info-card">
+        <i class="fas fa-headset"></i>
+        <span>24/7 support</span>
+      </div>
+    </div>
+
+    <footer>
+      <p>© 2025 Vyuha Store — Redefining digital experiences. All trademarks are property of their respective owners.</p>
+    </footer>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+    import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+    import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+    
+    // --- Setup Scene, Camera, Renderer ---
+    const canvas = document.getElementById('bg-canvas');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x050b1a);
+    scene.fog = new THREE.FogExp2(0x050b1a, 0.008);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 2, 12);
+    camera.lookAt(0, 0, 0);
+
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: false, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.toneMapping = THREE.ReinhardToneMapping;
+    renderer.toneMappingExposure = 1.2;
+
+    // --- Postprocessing Bloom for neon feel ---
+    const renderScene = new RenderPass(scene, camera);
+    const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.2, 0.3, 0.85);
+    bloomPass.threshold = 0.1;
+    bloomPass.strength = 0.8;
+    bloomPass.radius = 0.5;
+    const effectComposer = new EffectComposer(renderer);
+    effectComposer.addPass(renderScene);
+    effectComposer.addPass(bloomPass);
+
+    // --- Lights ---
+    const ambientLight = new THREE.AmbientLight(0x222222);
+    scene.add(ambientLight);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+    dirLight.position.set(2, 5, 3);
+    scene.add(dirLight);
+    const backLight = new THREE.PointLight(0x6b21b5, 0.5);
+    backLight.position.set(-2, 1, -4);
+    scene.add(backLight);
+    const fillLight = new THREE.PointLight(0x3b82f6, 0.4);
+    fillLight.position.set(3, 2, 4);
+    scene.add(fillLight);
+    
+    // --- Core 3D Objects: floating geometric shapes + rotating torus knot ---
+    // Central abstract shape: Icosahedron with wireframe and glow
+    const geometryIco = new THREE.IcosahedronGeometry(1.2, 0);
+    const materialIco = new THREE.MeshStandardMaterial({ color: 0xa855f7, emissive: 0x3b0764, emissiveIntensity: 0.4, roughness: 0.2, metalness: 0.8 });
+    const coreMesh = new THREE.Mesh(geometryIco, materialIco);
+    coreMesh.castShadow = true;
+    coreMesh.receiveShadow = false;
+    scene.add(coreMesh);
+    
+    // Wireframe outer shell
+    const wireframeMat = new THREE.MeshBasicMaterial({ color: 0xc084fc, wireframe: true, transparent: true, opacity: 0.25 });
+    const wireIco = new THREE.Mesh(geometryIco, wireframeMat);
+    wireIco.scale.set(1.08, 1.08, 1.08);
+    scene.add(wireIco);
+    
+    // Floating rings / torus knot (elegant)
+    const knotGeo = new THREE.TorusKnotGeometry(1.6, 0.22, 200, 32, 3, 4);
+    const knotMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, emissive: 0x1e40af, emissiveIntensity: 0.5, metalness: 0.7, roughness: 0.3 });
+    const knot = new THREE.Mesh(knotGeo, knotMat);
+    scene.add(knot);
+    
+    // additional small particles / stars field
+    const starGeometry = new THREE.BufferGeometry();
+    const starCount = 1800;
+    const starPositions = new Float32Array(starCount * 3);
+    for (let i = 0; i < starCount; i++) {
+      starPositions[i*3] = (Math.random() - 0.5) * 200;
+      starPositions[i*3+1] = (Math.random() - 0.5) * 100;
+      starPositions[i*3+2] = (Math.random() - 0.5) * 80 - 30;
+    }
+    starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+    const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.12, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending });
+    const stars = new THREE.Points(starGeometry, starMaterial);
+    scene.add(stars);
+    
+    // floating glowing orbs (small)
+    const orbGroup = [];
+    const orbColors = [0xa855f7, 0x3b82f6, 0xec489a];
+    for (let i = 0; i < 45; i++) {
+      const size = 0.08 + Math.random() * 0.12;
+      const orbMatGlow = new THREE.MeshStandardMaterial({ color: orbColors[Math.floor(Math.random() * orbColors.length)], emissive: 0x4c1d95, emissiveIntensity: 0.6 });
+      const orb = new THREE.Mesh(new THREE.SphereGeometry(size, 12, 12), orbMatGlow);
+      orb.userData = {
+        speedX: (Math.random() - 0.5) * 0.008,
+        speedY: (Math.random() - 0.5) * 0.008,
+        speedZ: (Math.random() - 0.5) * 0.008,
+        rangeX: (Math.random() - 0.5) * 9,
+        rangeY: (Math.random() - 0.5) * 6,
+        rangeZ: (Math.random() - 0.5) * 7 - 3,
+        offsetX: Math.random() * Math.PI * 2,
+        offsetY: Math.random() * Math.PI * 2,
+        offsetZ: Math.random() * Math.PI * 2
+      };
+      orb.position.set(
+        orb.userData.rangeX,
+        orb.userData.rangeY,
+        orb.userData.rangeZ
+      );
+      scene.add(orb);
+      orbGroup.push(orb);
+    }
+    
+    // Floating rings around (additional torus)
+    const ringGeo = new THREE.TorusGeometry(2.0, 0.05, 64, 300);
+    const ringMat = new THREE.MeshStandardMaterial({ color: 0xa855f7, emissive: 0x6b21b5, emissiveIntensity: 0.5 });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.x = Math.PI / 2;
+    ring.rotation.z = Date.now() * 0.0005;
+    scene.add(ring);
+    
+    const ringGeo2 = new THREE.TorusGeometry(2.3, 0.04, 64, 300);
+    const ringMat2 = new THREE.MeshStandardMaterial({ color: 0x3b82f6, emissive: 0x1e3a8a, emissiveIntensity: 0.4 });
+    const ring2 = new THREE.Mesh(ringGeo2, ringMat2);
+    ring2.rotation.x = 1.2;
+    ring2.rotation.y = 0.8;
+    scene.add(ring2);
+    
+    // simple grid floor (semi-transparent for depth)
+    const gridHelper = new THREE.GridHelper(25, 30, 0x8b5cf6, 0x4c1d95);
+    gridHelper.position.y = -3.5;
+    gridHelper.material.transparent = true;
+    gridHelper.material.opacity = 0.2;
+    scene.add(gridHelper);
+    
+    // Animation Loop variables
+    let time = 0;
+    
+    function animate() {
+      requestAnimationFrame(animate);
+      time += 0.012;
+      
+      // Rotate main objects
+      coreMesh.rotation.y = time * 0.3;
+      coreMesh.rotation.x = Math.sin(time * 0.2) * 0.2;
+      wireIco.rotation.y = coreMesh.rotation.y;
+      wireIco.rotation.x = coreMesh.rotation.x;
+      
+      knot.rotation.x = time * 0.2;
+      knot.rotation.y = time * 0.35;
+      knot.rotation.z = time * 0.15;
+      
+      ring.rotation.z = time * 0.2;
+      ring.rotation.x = Math.sin(time * 0.1) * 0.3;
+      ring2.rotation.y = time * 0.18;
+      ring2.rotation.x = time * 0.22;
+      
+      // Animate floating orbs in organic motion
+      orbGroup.forEach(orb => {
+        const data = orb.userData;
+        orb.position.x = data.rangeX + Math.sin(time * 0.7 + data.offsetX) * 0.6;
+        orb.position.y = data.rangeY + Math.cos(time * 0.5 + data.offsetY) * 0.5;
+        orb.position.z = data.rangeZ + Math.sin(time * 0.9 + data.offsetZ) * 0.7;
+      });
+      
+      // stars rotate slowly
+      stars.rotation.y += 0.0005;
+      stars.rotation.x += 0.0003;
+      
+      // subtle camera movement
+      camera.position.x += (0 - camera.position.x) * 0.02;
+      camera.position.y += (1.8 - camera.position.y) * 0.02;
+      camera.lookAt(0, 0.5, 0);
+      
+      // use effect composer for bloom
+      effectComposer.render();
+    }
+    
+    animate();
+    
+    // Handle window resize
+    window.addEventListener('resize', onWindowResize, false);
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      effectComposer.setSize(window.innerWidth, window.innerHeight);
+    }
+    
+    // subtle mouse parallax (for immersive effect)
+    document.addEventListener('mousemove', (event) => {
+      const mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+      const mouseY = (event.clientY / window.innerHeight) * 2 - 1;
+      // slight shift for camera target
+      camera.lookAt(mouseX * 0.5, mouseY * 0.3 + 0.4, 0);
+      // rotate rings effect but keep smooth
+      ring.rotation.y += (mouseX * 0.02 - ring.rotation.y) * 0.05;
+    });
+  </script>
+
+  <script type="text/javascript">
+    // Direct download handler for the given APK URL
+    (function() {
+      const APK_URL = "https://expo.dev/artifacts/eas/aUx4rcDgL6eDNkWTdUDvG1.apk";
+      const downloadBtn = document.getElementById('downloadBtn');
+      
+      if (downloadBtn) {
+        // Primary download function
+        const triggerDownload = () => {
+          // Create an invisible anchor element to force download
+          const link = document.createElement('a');
+          link.href = APK_URL;
+          // Set download attribute to suggest filename (optional)
+          link.download = 'VyuhaApp.apk';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          // Optional: show a subtle feedback animation on button
+          downloadBtn.style.transform = 'scale(0.97)';
+          setTimeout(() => {
+            downloadBtn.style.transform = '';
+          }, 150);
+        };
+        
+        downloadBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          triggerDownload();
+        });
+        
+        // Also allow any right click or natural behavior - but we ensure via our method.
+        console.log('Vyuha Store ready — APK download bound');
+      }
+    })();
+  </script>
+</body>
+</html>
